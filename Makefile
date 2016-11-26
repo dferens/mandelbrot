@@ -1,8 +1,7 @@
 NVCC = /usr/local/cuda/bin/nvcc
-CUBIN_FILE = main.cubin
 PYTHON = PYTHONHOME=$(VIRTUAL_ENV) /usr/local/bin/python
 
-all: clean, compile
+all: clean, compile, benchmark
 
 clean:
 	find ./var -type f -delete
@@ -19,3 +18,6 @@ cpu:
 gpu:
 	./var/gpu 1000 1000 1000 var/gpu-result.csv
 	$(PYTHON) src/client/client.py var/gpu-result.csv 1000 1000 var/gpu-result.png
+
+benchmark:
+	$(PYTHON) src/benchmark/main.py
