@@ -153,7 +153,12 @@ int main(int argc, char *argv[] ) {
             printf("Iterations: %d\n", maxiter);
             int points_count = width_px * height_px;
             Complex* points = get_points(MIN, MAX, width_px, height_px);
+            printf("Started...\n");
+            clock_t begin = clock();
             int* results = calc_mandelbrot_set(points, points_count, maxiter);
+            clock_t end = clock();
+            double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+            printf("Spent: %f seconds\n", time_spent);
             result_file = fopen(result_path,"w");
             if (result_file != NULL) {
                 printf("Writing to: \"%s\"\n", result_path);
