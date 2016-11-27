@@ -1,18 +1,36 @@
 import re
+import argparse
 from subprocess import Popen, PIPE
 
 from matplotlib import pyplot as plt
 
 
-def unzip(list_of_tuples):
-    """
-    Splits list of tuples into separate lists
-    """
-    return zip(*list_of_tuples)
+class Target(tuple):
+
+    @property
+    def id(self):
+        return self[0]
+
+    @property
+    def label(self):
+        return self[1]
+
+    @property
+    def executable(self):
+        return self[2]
+
+    @classmethod
+    def new(cls, id, label, executable):
+        return Target([id, label, executable])
+
+
+CPU = Target.new('cpu', 'CPU', './var/cpu')
+GPU = Target.new('gpu', 'GPU', './var/gpu')
+
 
 def run_mandelbort(target, width, height, max_iter, csv_file=None):
     """
-    @param str target: 'cpu' or 'gpu'
+    @param set[Target] targets:
     @param int width:
     @param int height:
     @param int max_iter:
@@ -20,13 +38,9 @@ def run_mandelbort(target, width, height, max_iter, csv_file=None):
     @returns: computation time in seconds
     @rtype: float
     """
-    assert target in {'cpu', 'gpu'}
+    assert isinstance(target, Target)
 
-    command = {
-        'cpu': './var/cpu',
-        'gpu': './var/gpu'
-    }[target]
-    args = [command, width, height, max_iter]
+    args = [target.executable, width, height, max_iter]
 
     if csv_file is not None:
         args.append(csv_file)
@@ -41,57 +55,57 @@ def run_mandelbort(target, width, height, max_iter, csv_file=None):
         return seconds
 
 
-def run_mandelbort_targets(width, height, max_iter):
-    """
-    @returns: (cpu time, gpu time)
-    @rtype: (float, float)
-    """
-    return (
-        run_mandelbort('cpu', width, height, max_iter),
-        run_mandelbort('gpu', width, height, max_iter)
-    )
-
-
-def benchmark_by_max_iter(points):
-    MIN_ITER, MAX_ITER = 0, 2000
-    width, height = 1000, 1000
+def benchmark_by_max_iter(points, targets):
+    MIN_ITER, MAX_ITER = 0, 1000
+    WIDTH, HEIGHT = 1000, 1000
 
     x = range(MIN_ITER, MAX_ITER + 1, (MAX_ITER - MIN_ITER) / points)
-    y_cpu, y_gpu = unzip([
-        run_mandelbort_targets(width, height, max_iter)
-        for max_iter in x
-    ])
     plt.clf()
-    plt.plot(x, y_cpu, label='CPU')
-    plt.plot(x, y_gpu, label='GPU')
+
+    for t in targets:
+        y = [run_mandelbort(t, WIDTH, HEIGHT, max_iter) for max_iter in x]
+        plt.plot(x, y, label=t.label)
+
     plt.legend(loc='upper left')
-    plt.title('Render {}x{} image'.format(width, height))
+    plt.title('Render {}x{} image'.format(WIDTH, HEIGHT))
     plt.xlabel('Max. iter')
     plt.ylabel('Seconds spent')
     plt.savefig('var/benchmark-by-maxiter.png')
 
 
-def benchmark_by_image_size(points):
+def benchmark_by_image_size(points, targets):
     MIN_SIZE, MAX_SIZE = 10, 1000
-    max_iter = 1000
+    MAX_ITER = 1000
 
     x = range(MIN_SIZE, MAX_SIZE + 1, (MAX_SIZE - MIN_SIZE) / points)
-    y_cpu, y_gpu = unzip([
-        run_mandelbort_targets(a, a, max_iter)
-        for a in x
-    ])
     plt.clf()
-    plt.plot(x, y_cpu, label='CPU')
-    plt.plot(x, y_gpu, label='GPU')
+
+    for t in targets:
+        y = [run_mandelbort(t, val, val, MAX_ITER) for val in x]
+        plt.plot(x, y, label=t.label)
+
     plt.legend(loc='upper left')
-    plt.title('Render image with {} max iter.'.format(max_iter))
+    plt.title('Render image with {} max iter.'.format(MAX_ITER))
     plt.xlabel('Image size px.')
     plt.ylabel('Seconds spent')
     plt.savefig('var/benchmark-by-imagesize.png')
 
 def main():
-    benchmark_by_max_iter(10)
-    benchmark_by_image_size(10)
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('points', metavar='p', type=int, help='Number of points on chart')
+    parser.add_argument('--cpu', action='store_true', help='Run only on CPU')
+    parser.add_argument('--gpu', action='store_true', help='Run only on GPU')
+    args = parser.parse_args()
+
+    targets = {CPU, GPU}
+
+    if args.cpu:
+        targets = {CPU}
+    elif args.gpu:
+        targets = {GPU}
+
+    benchmark_by_max_iter(args.points, targets)
+    benchmark_by_image_size(args.points, targets)
 
 if __name__ == '__main__':
     main()

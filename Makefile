@@ -21,4 +21,4 @@ gpu:
 
 benchmark:
 	@echo 'Running benchmarks:'
-	$(PYTHON) src/benchmark/main.py
+	$(PYTHON) src/benchmark/main.py 10
