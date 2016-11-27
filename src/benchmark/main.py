@@ -68,13 +68,18 @@ def benchmark_by_max_iter(points, targets):
     MIN_ITER, MAX_ITER = 0, 1000
     WIDTH, HEIGHT = 1000, 1000
 
-    x = range(MIN_ITER, MAX_ITER + 1, (MAX_ITER - MIN_ITER) / points)
+    x_series = range(MIN_ITER, MAX_ITER + 1, (MAX_ITER - MIN_ITER) / points)
     plt.clf()
+    fig, ax = plt.subplots()
 
     for t in targets:
-        y = [run_mandelbort(t, WIDTH, HEIGHT, max_iter) for max_iter in x]
-        plt.plot(x, y, label=t.label)
+        y_series = [run_mandelbort(t, WIDTH, HEIGHT, max_iter) for max_iter in x_series]
+        plt.plot(x_series, y_series, label=t.label, marker='.')
 
+        for (x, y) in zip(x_series, y_series):
+            ax.annotate('{:.3}'.format(y), (x, y))
+
+    plt.xticks(x_series)
     plt.legend(loc='upper left')
     plt.title('Render {}x{} image'.format(WIDTH, HEIGHT))
     plt.xlabel('Max. iter')
@@ -86,13 +91,18 @@ def benchmark_by_image_size(points, targets):
     MIN_SIZE, MAX_SIZE = 10, 1000
     MAX_ITER = 1000
 
-    x = range(MIN_SIZE, MAX_SIZE + 1, (MAX_SIZE - MIN_SIZE) / points)
+    x_series = range(MIN_SIZE, MAX_SIZE + 1, (MAX_SIZE - MIN_SIZE) / points)
     plt.clf()
+    fig, ax = plt.subplots()
 
     for t in targets:
-        y = [run_mandelbort(t, val, val, MAX_ITER) for val in x]
-        plt.plot(x, y, label=t.label)
+        y_series = [run_mandelbort(t, x, x, MAX_ITER) for x in x_series]
+        plt.plot(x_series, y_series, label=t.label, marker='.')
 
+        for (x, y) in zip(x_series, y_series):
+            ax.annotate('{:.3}'.format(y), (x, y))
+
+    plt.xticks(x_series)
     plt.legend(loc='upper left')
     plt.title('Render image with {} max iter.'.format(MAX_ITER))
     plt.xlabel('Image size px.')
