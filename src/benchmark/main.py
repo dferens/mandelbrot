@@ -4,6 +4,15 @@ from subprocess import Popen, PIPE
 
 from matplotlib import pyplot as plt
 
+try:
+    # Requires terminal-notifier:
+    #    https://github.com/julienXX/terminal-notifier
+    from pync import Notifier
+except ImportError:
+    notify_finished = lambda: 0
+else:
+    notify_finished = lambda: Notifier.notify('Finished', title='Mandelbrot', sound='default')
+
 
 class Target(tuple):
 
@@ -106,6 +115,7 @@ def main():
 
     benchmark_by_max_iter(args.points, targets)
     benchmark_by_image_size(args.points, targets)
+    notify_finished()
 
 if __name__ == '__main__':
     main()
