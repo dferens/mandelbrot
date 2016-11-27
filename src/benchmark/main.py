@@ -90,8 +90,8 @@ def benchmark_by_image_size(points):
     plt.savefig('var/benchmark-by-imagesize.png')
 
 def main():
-    benchmark_by_max_iter(2)
-    benchmark_by_image_size(2)
+    benchmark_by_max_iter(10)
+    benchmark_by_image_size(10)
 
 if __name__ == '__main__':
     main()
